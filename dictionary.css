@@ -1,0 +1,382 @@
+/* ============================================================
+   Podracer Engineer / Starfighter Pilot — page 53
+   A DK-style "Incredible Cross-Sections" visual-dictionary page,
+   recreated in HTML + CSS.
+   ============================================================ */
+
+:root {
+  --paper:      #f4efe4;
+  --paper-edge: #e7ded0;
+  --ink:        #1c1a17;
+  --ink-soft:   #4a463f;
+  --rule:       #8d8676;
+  --title:      #23364e;   /* deep teal-navy heading */
+  --pod-blue:   #4a9fd8;
+  --pod-blue-d: #2f6fa0;
+  --pod-grey:   #9aa19a;
+  --pod-grey-d: #6d746d;
+  --amber:      #e2b23a;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: #2a2621;
+  font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  color: var(--ink);
+}
+
+.book {
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px 60px;
+}
+
+/* ---- the physical page ------------------------------------ */
+.page {
+  position: relative;
+  width: min(960px, 96vw);
+  aspect-ratio: 3 / 4;
+  background:
+    radial-gradient(120% 90% at 50% 0%, #fbf7ee 0%, var(--paper) 55%, var(--paper-edge) 100%);
+  box-shadow:
+    0 2px 0 rgba(0,0,0,.15),
+    0 24px 60px rgba(0,0,0,.55),
+    inset 0 0 90px rgba(120,105,80,.12);
+  padding: 3.4% 3.6%;
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 2.4%;
+  overflow: hidden;
+  border-radius: 2px;
+}
+/* faint centre-gutter shadow like a bound spine on the left edge */
+.page::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 46px;
+  background: linear-gradient(90deg, rgba(60,48,30,.20), transparent);
+  pointer-events: none;
+}
+
+.col { position: relative; min-width: 0; }
+
+/* ---- headings & type -------------------------------------- */
+.section-title {
+  font-family: "Trajan Pro", "Optima", "Palatino Linotype", Georgia, serif;
+  color: var(--title);
+  font-weight: 600;
+  letter-spacing: .5px;
+  font-size: clamp(20px, 3.4vw, 34px);
+  margin: 0 0 .35em;
+  line-height: 1;
+}
+
+.intro {
+  font-size: clamp(10px, 1.35vw, 14px);
+  line-height: 1.5;
+  margin: 0 0 1em;
+  text-align: justify;
+  color: var(--ink);
+}
+.intro::first-letter { /* subtle emphasis */ }
+
+.body {
+  font-size: clamp(9px, 1.15vw, 12px);
+  line-height: 1.45;
+  text-align: justify;
+  margin: 0;
+}
+.two-up {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5%;
+  margin: 0 0 3%;
+}
+
+.caption {
+  font-size: clamp(8px, 1.05vw, 11px);
+  line-height: 1.4;
+  color: var(--ink-soft);
+  text-align: justify;
+  margin: .4em 0 0;
+}
+.caption em { font-style: italic; }
+
+/* ============================================================
+   PODRACER — CSS illustration of Anakin's pod cockpit
+   ============================================================ */
+.pod-stage {
+  position: relative;
+  height: 58%;
+  margin: 2% 0 3%;
+}
+
+/* --- the pilot pod (blue nose + grey hull) --- */
+.pod {
+  position: absolute;
+  left: 26%; top: 2%;
+  width: 48%; height: 92%;
+}
+.pod-tail {
+  position: absolute; left: 34%; top: -4%;
+  width: 32%; height: 30%;
+  background: linear-gradient(180deg, var(--pod-grey) 0%, var(--pod-grey-d) 100%);
+  border-radius: 50% 50% 40% 40% / 90% 90% 20% 20%;
+}
+.pod-canopy {
+  position: absolute; left: 14%; top: 8%;
+  width: 72%; height: 46%;
+  background: linear-gradient(180deg, var(--pod-blue) 0%, var(--pod-blue-d) 100%);
+  border-radius: 46% 46% 30% 30% / 60% 60% 22% 22%;
+  overflow: hidden;
+  box-shadow: inset -8px -6px 22px rgba(0,0,0,.35);
+}
+.pod-canopy .stripe {
+  position: absolute; left: -10%;
+  width: 120%; height: 8%;
+  background: var(--pod-grey);
+  opacity: .85;
+  transform: skewY(-4deg);
+}
+.stripe.s1 { top: 20%; }
+.stripe.s2 { top: 38%; }
+.stripe.s3 { top: 56%; }
+.stripe.s4 { top: 74%; }
+
+.pod-cockpit {
+  position: absolute; left: 24%; top: 34%;
+  width: 52%; height: 26%;
+  background: radial-gradient(circle at 50% 40%, #5a2320 0%, #2c1310 70%, #180a09 100%);
+  border-radius: 44% 44% 20% 20% / 60% 60% 30% 30%;
+  box-shadow: inset 0 0 18px #000;
+}
+.pod-hull {
+  position: absolute; left: 4%; top: 46%;
+  width: 92%; height: 54%;
+  background:
+    radial-gradient(120% 90% at 45% 30%, #aeb3ac 0%, var(--pod-grey) 45%, var(--pod-grey-d) 100%);
+  border-radius: 46% 46% 50% 50% / 30% 30% 70% 70%;
+  box-shadow: inset -14px -10px 34px rgba(0,0,0,.30);
+}
+.pod-hull .cross {
+  position: absolute; left: 30%; top: 30%;
+  width: 40%; height: 40%;
+}
+.pod-hull .cross::before,
+.pod-hull .cross::after {
+  content: ""; position: absolute; left: 46%; top: 0;
+  width: 8%; height: 100%;
+  background: var(--pod-blue-d);
+  opacity: .8;
+}
+.pod-hull .cross::before { transform: rotate(38deg); }
+.pod-hull .cross::after  { transform: rotate(-38deg); }
+
+.wing {
+  position: absolute; top: 40%;
+  width: 16%; height: 12%;
+  background: linear-gradient(90deg, #55605c, #2f3634);
+  border-radius: 30%;
+}
+.wing-l { left: -12%; transform: rotate(12deg); }
+.wing-r { right: -12%; transform: rotate(-12deg); }
+.brace {
+  position: absolute; bottom: 6%;
+  width: 6%; height: 34%;
+  background: linear-gradient(180deg, #4a5250, #23110f);
+  border-radius: 30%;
+}
+.brace-l { left: 8%;  transform: rotate(10deg); }
+.brace-r { right: 8%; transform: rotate(-10deg); }
+
+/* --- engine pod on the far left --- */
+.engine {
+  position: absolute;
+  left: -2%; top: 22%;
+  width: 22%; height: 66%;
+  transform: rotate(-14deg);
+}
+.engine-cone {
+  position: absolute; left: 30%; top: -6%;
+  width: 40%; height: 22%;
+  background: linear-gradient(180deg, #b8bcb2, #6b7068);
+  border-radius: 50% 50% 20% 20%;
+}
+.engine-body {
+  position: absolute; left: 8%; top: 14%;
+  width: 84%; height: 70%;
+  background: linear-gradient(180deg, #8f958c 0%, #565c54 60%, #3a3f38 100%);
+  border-radius: 40% 40% 46% 46% / 20% 20% 80% 80%;
+  box-shadow: inset -8px -4px 20px rgba(0,0,0,.4);
+}
+.engine-intake {
+  position: absolute; left: 20%; top: 30%;
+  width: 60%; height: 26%;
+  background: radial-gradient(circle at 50% 40%, #c98a2a, #5a3a10);
+  border-radius: 50%;
+  box-shadow: inset 0 0 12px #000;
+}
+.engine-tail {
+  position: absolute; left: 34%; bottom: -14%;
+  width: 32%; height: 30%;
+  background: linear-gradient(180deg, #6b5230, #2e2413);
+  border-radius: 20% 20% 50% 50%;
+}
+
+/* ============================================================
+   LEADER-LINE LABELS
+   ============================================================ */
+.label {
+  position: absolute;
+  left: var(--x); top: var(--y);
+  max-width: 16ch;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: clamp(7px, .95vw, 11px);
+  color: var(--ink);
+  line-height: 1.15;
+  z-index: 3;
+}
+/* thin connector rule under each label */
+.label::after {
+  content: "";
+  position: absolute;
+  bottom: -3px; left: 0;
+  width: 82%; height: 1px;
+  background: var(--rule);
+}
+.label.lbl-hatch, .label.lbl-telemetry, .label.lbl-seat,
+.label.lbl-throttle, .label.lbl-brace {
+  text-align: right;
+}
+.label.lbl-hatch::after, .label.lbl-telemetry::after, .label.lbl-seat::after,
+.label.lbl-throttle::after, .label.lbl-brace::after {
+  left: auto; right: 0;
+}
+
+/* ============================================================
+   FOOT NOTES + ROUND PHOTO
+   ============================================================ */
+.foot-notes {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32% 1fr;
+  gap: 4%;
+  align-items: start;
+}
+.round-photo { margin: 0; grid-row: span 2; }
+.photo {
+  width: 100%; aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid #d8cbb0;
+  box-shadow: 0 3px 8px rgba(0,0,0,.3), inset 0 0 20px rgba(0,0,0,.25);
+}
+.ph-race {
+  background:
+    radial-gradient(circle at 40% 35%, #cbb089 0%, #8a6a3a 40%, #3c2c16 100%),
+    linear-gradient(180deg, #b89a63, #4a3620);
+}
+.cap-1 { grid-column: 2; }
+.cap-2 { grid-column: 2; }
+
+/* ============================================================
+   STARFIGHTER column extras
+   ============================================================ */
+.drop-photo {
+  float: left;
+  width: 20%; aspect-ratio: 1;
+  margin: 2px 8px 4px 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 45% 35%, #3a4a5c, #10161f 90%);
+  border: 2px solid #c9bfa8;
+}
+
+.film-strip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4%;
+  margin: 3% 0;
+}
+.film {
+  aspect-ratio: 4 / 3;
+  border: 1px solid #cbbfa4;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.ph-battle {
+  background:
+    radial-gradient(circle at 30% 60%, #d6b23a, #7a5a12 45%, #201808 100%),
+    linear-gradient(160deg, #2b2a26, #0c0b09);
+}
+.ph-explode {
+  background:
+    radial-gradient(circle at 55% 55%, #ffe9c0 0%, #e08a2a 25%, #7a3410 55%, #241008 100%);
+}
+
+/* ============================================================
+   ANAKIN'S PODRACER DISPLAYS — the gauges
+   ============================================================ */
+.displays {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6% 8%;
+  margin-top: 4%;
+  align-items: start;
+}
+.gauge { margin: 0; text-align: center; }
+.gauge svg {
+  width: 74%;
+  max-width: 120px;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.4));
+}
+.gauge.schematic svg { width: 58%; }
+.gauge figcaption {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: clamp(7px, .9vw, 10px);
+  color: var(--ink-soft);
+  margin-top: .3em;
+  line-height: 1.2;
+}
+.displays-title {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-family: "Trajan Pro", Optima, Georgia, serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-size: clamp(8px, 1.05vw, 12px);
+  color: var(--title);
+  margin: .4em 0 0;
+}
+.label.disp-critical {
+  position: static;
+  grid-column: 1 / -1;
+  max-width: none;
+  text-align: center;
+}
+.label.disp-critical::after { display: none; }
+
+/* ---- page number ---- */
+.folio {
+  position: absolute;
+  right: 3.6%; top: 2.4%;
+  font-family: Georgia, serif;
+  font-size: clamp(11px, 1.4vw, 15px);
+  color: var(--ink-soft);
+}
+
+/* ============================================================
+   Responsive: stack columns on narrow screens
+   ============================================================ */
+@media (max-width: 640px) {
+  .page {
+    aspect-ratio: auto;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .pod-stage { height: 320px; }
+  .folio { top: 8px; right: 12px; }
+}
