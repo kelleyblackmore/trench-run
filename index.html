@@ -4,83 +4,140 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#000000" />
-<meta name="description" content="Trench Run — a Star Wars-inspired Death Star trench-run arcade shooter. Pilot your X-wing, blast TIE fighters, and fire torpedoes into the exhaust port." />
+<meta name="description" content="Trench Run — a real-time 3D Star Wars-inspired X-wing trench-run shooter. Dogfight TIE fighters, dodge the trench, and torpedo the exhaust port." />
 <title>TRENCH RUN — Death Star Assault</title>
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="styles.css" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23000' stroke='%23ffe81f' stroke-width='4'/%3E%3Ccircle cx='66' cy='38' r='12' fill='none' stroke='%23ffe81f' stroke-width='3'/%3E%3C/svg%3E" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.min.js",
+    "three/addons/": "./vendor/three/addons/"
+  }
+}
+</script>
 </head>
 <body>
-  <div id="game-wrap">
-    <canvas id="game"></canvas>
+  <div id="stage">
+    <canvas id="scene"></canvas>
+    <canvas id="hud"></canvas>
 
-    <!-- HUD -->
-    <div id="hud" class="hidden" aria-hidden="true">
-      <div class="hud-row hud-top">
-        <div class="hud-block">
-          <span class="hud-label">SHIELDS</span>
-          <div class="bar"><div id="shield-fill" class="bar-fill"></div></div>
+    <!-- Static HUD frame (HTML/CSS) -->
+    <div id="frame" class="hidden" aria-hidden="true">
+      <div class="corner tl">
+        <div class="gauge">
+          <span class="glabel">HULL</span>
+          <div class="meter"><i id="hull-fill"></i></div>
         </div>
-        <div class="hud-block hud-center">
-          <span class="hud-label">SCORE</span>
-          <span id="score" class="hud-value">0</span>
-        </div>
-        <div class="hud-block hud-right">
-          <span class="hud-label">APPROACH</span>
-          <div class="bar"><div id="dist-fill" class="bar-fill dist"></div></div>
+        <div class="gauge">
+          <span class="glabel">SHIELDS</span>
+          <div class="meter shield"><i id="shield-fill"></i></div>
         </div>
       </div>
-      <div id="targeting" class="targeting hidden">⟢ STAY ON TARGET ⟣</div>
+
+      <div class="corner tr">
+        <div class="readout"><span class="rlabel">SCORE</span><span id="score" class="rval">0</span></div>
+        <div class="readout"><span class="rlabel">TIE KILLS</span><span id="kills" class="rval">0</span></div>
+      </div>
+
+      <div class="corner bl">
+        <div class="throttle">
+          <span class="glabel">THROTTLE</span>
+          <div class="tbar"><i id="throttle-fill"></i></div>
+        </div>
+        <div class="throttle">
+          <span class="glabel">BOOST</span>
+          <div class="tbar"><i id="energy-fill"></i></div>
+        </div>
+      </div>
+
+      <div class="corner br">
+        <div class="approach">
+          <span class="glabel">APPROACH TO PORT</span>
+          <div class="tbar"><i id="dist-fill"></i></div>
+        </div>
+      </div>
+
+      <div id="banner" class="banner"></div>
+      <div id="lock-status" class="lock-status hidden">TORPEDO LOCK</div>
     </div>
 
     <!-- Touch controls -->
-    <div id="touch-controls" class="hidden">
-      <button id="fire-btn" aria-label="Fire">FIRE</button>
+    <div id="touch" class="hidden">
+      <div id="stick-zone"><div id="stick-base"><div id="stick-knob"></div></div></div>
+      <button id="boost-btn" class="tbtn" aria-label="Boost">BOOST</button>
+      <button id="torp-btn" class="tbtn torp hidden" aria-label="Fire torpedo">TORPEDO</button>
     </div>
 
-    <!-- Title / menus -->
+    <!-- Menus -->
     <div id="overlay" class="overlay">
-      <div id="title-screen" class="screen">
-        <div class="crawl-badge">A LONG TIME AGO IN A GALAXY FAR, FAR AWAY…</div>
-        <h1 class="logo">TRENCH&nbsp;RUN</h1>
-        <p class="subtitle">DEATH STAR ASSAULT</p>
-        <div class="brief">
-          <p>The Empire's battle station is in range. The exhaust port is a small thermal hole, ray-shielded — you'll have to use proton torpedoes.</p>
-          <p><strong>Stay in the trench. Dodge the towers. Blast the TIEs. Hit the port.</strong></p>
-        </div>
-        <button id="start-btn" class="btn primary">START RUN</button>
-        <div class="controls-hint">
-          <span><kbd>← → ↑ ↓</kbd> / <kbd>WASD</kbd> fly</span>
-          <span><kbd>SPACE</kbd> fire</span>
-          <span><kbd>P</kbd> pause</span>
-          <span class="touch-only">Drag to fly · auto-fire</span>
-        </div>
-        <div class="hiscore-line">BEST: <span id="title-hiscore">0</span></div>
+      <div id="loading" class="screen">
+        <div class="spinner"></div>
+        <p class="loading-txt">CALIBRATING TARGETING COMPUTER…</p>
       </div>
 
-      <div id="pause-screen" class="screen hidden">
+      <div id="title" class="screen hidden">
+        <div class="crawl">A LONG TIME AGO IN A GALAXY FAR, FAR AWAY…</div>
+        <h1 class="logo">TRENCH<span>RUN</span></h1>
+        <p class="tagline">DEATH STAR ASSAULT</p>
+        <p class="brief">The exhaust port is ray-shielded — only a precise proton-torpedo hit will reach the reactor. Fly the trench, hold off the TIEs, and take the shot.</p>
+        <div class="menu-buttons">
+          <button id="play-btn" class="btn primary">START RUN</button>
+          <button id="how-btn" class="btn ghost">HOW TO FLY</button>
+        </div>
+        <div class="diff-row" role="group" aria-label="Difficulty">
+          <span class="diff-label">DIFFICULTY</span>
+          <button class="diff" data-diff="cadet">CADET</button>
+          <button class="diff sel" data-diff="pilot">PILOT</button>
+          <button class="diff" data-diff="ace">ACE</button>
+        </div>
+        <div class="best-line">BEST <span id="title-best">0</span></div>
+      </div>
+
+      <div id="howto" class="screen hidden">
+        <h2 class="panel-title">FLIGHT MANUAL</h2>
+        <div class="manual">
+          <div class="mrow"><span class="mkeys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>◄►▲▼</kbd> / mouse</span><span>steer &amp; bank through the trench</span></div>
+          <div class="mrow"><span class="mkeys"><kbd>Space</kbd> / mouse / <kbd>L</kbd></span><span>fire quad lasers</span></div>
+          <div class="mrow"><span class="mkeys"><kbd>Shift</kbd></span><span>engine boost</span></div>
+          <div class="mrow"><span class="mkeys"><kbd>F</kbd> / <kbd>Space</kbd></span><span>fire proton torpedo (finale)</span></div>
+          <div class="mrow"><span class="mkeys"><kbd>P</kbd> / <kbd>Esc</kbd></span><span>pause</span></div>
+          <div class="mrow touch-only"><span class="mkeys">left stick</span><span>steer · lasers auto-fire</span></div>
+        </div>
+        <p class="hint-lock">Keep an enemy centered to build a <b>target lock</b>; the lead pip shows where to shoot. At the port, hold your aim until <b>TORPEDO LOCK</b>, then fire.</p>
+        <button id="how-back" class="btn primary">GOT IT</button>
+      </div>
+
+      <div id="pause" class="screen hidden">
         <h2 class="panel-title">PAUSED</h2>
         <button id="resume-btn" class="btn primary">RESUME</button>
-        <button id="restart-btn" class="btn">ABORT &amp; RESTART</button>
+        <button id="abort-btn" class="btn ghost">ABORT TO MENU</button>
       </div>
 
-      <div id="end-screen" class="screen hidden">
-        <h2 id="end-title" class="panel-title">DESTROYED</h2>
-        <p id="end-msg" class="end-msg"></p>
-        <div class="score-final">
-          <div>SCORE <span id="final-score">0</span></div>
-          <div>BEST <span id="final-best">0</span></div>
+      <div id="result" class="screen hidden">
+        <h2 id="result-title" class="panel-title">DIRECT HIT</h2>
+        <p id="result-msg" class="brief"></p>
+        <div class="stat-grid">
+          <div><span id="r-score">0</span><label>SCORE</label></div>
+          <div><span id="r-kills">0</span><label>TIE KILLS</label></div>
+          <div><span id="r-best">0</span><label>BEST</label></div>
         </div>
-        <button id="again-btn" class="btn primary">FLY AGAIN</button>
+        <div class="menu-buttons">
+          <button id="again-btn" class="btn primary">FLY AGAIN</button>
+          <button id="menu-btn" class="btn ghost">MAIN MENU</button>
+        </div>
       </div>
     </div>
 
-    <!-- top-right utility buttons -->
+    <!-- Top-right utilities -->
     <div id="util">
-      <button id="mute-btn" class="util-btn" aria-label="Sound on" aria-pressed="false" title="Sound">♪</button>
-      <button id="pause-toggle" class="util-btn hidden" aria-label="Pause" title="Pause">⏸</button>
+      <button id="sound-btn" class="ubtn" aria-label="Sound on" aria-pressed="false" title="Sound">♪</button>
+      <button id="quality-btn" class="ubtn" aria-label="Graphics quality" title="Graphics quality">HIGH</button>
+      <button id="pause-btn" class="ubtn hidden" aria-label="Pause" title="Pause">⏸</button>
     </div>
   </div>
 
-  <script src="game.js"></script>
+  <noscript><p style="color:#fff;text-align:center;margin-top:2em">This game requires JavaScript and WebGL.</p></noscript>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>

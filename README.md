@@ -1,48 +1,68 @@
 # TRENCH RUN — Death Star Assault
 
-A Star Wars–inspired, browser-based arcade shooter. Pilot your X-wing down the
-Death Star trench: dodge the turbolaser towers, blast TIE fighters, survive the
-gauntlet, then put a proton torpedo straight into the exhaust port.
+A real-time **3D** Star Wars–inspired trench-run shooter, playable in the browser.
+Pilot an X-wing in third-person chase view down the Death Star trench: dogfight
+TIE fighters, dodge turbolaser towers, then lock a proton torpedo onto the
+exhaust port.
 
-**Pure client-side** — a single static page (HTML + CSS + vanilla JS + canvas).
-No build step, no dependencies, no assets. Sound is synthesized live with the
-Web Audio API. Runs anywhere, works offline, and plays on desktop **and** phones.
+Built with **Three.js** (WebGL) — cinematic bloom + FXAA post-processing, a
+procedurally-modelled X-wing and TIEs, a recycling greebled trench, synthesized
+audio, and a targeting-computer HUD. **No build step, no external requests:**
+Three.js is vendored locally, so the whole thing is static and offline-capable.
 
-## Play
+**▶ Play:** https://kelleyblackmore.github.io/trench-run/
 
-- **Desktop:** `← → ↑ ↓` or `WASD` to fly · `SPACE` (or hold mouse) to fire · `P` to pause.
-- **Touch:** drag anywhere to fly · auto-fire is on (or mash the **FIRE** button).
-- Reach the end of the trench, then line your reticle up on the glowing exhaust
-  port and fire while it's in range. **Stay on target.**
+## Controls
 
-Mute with the ♪ button (top-right). Your best score is saved locally.
+| | |
+|---|---|
+| **Steer / bank** | `W A S D` · arrow keys · mouse · gamepad left-stick · touch stick |
+| **Fire lasers** | `Space` / `L` / left-click (auto-fire on touch) |
+| **Boost** | `Shift` (or the BOOST button on touch) |
+| **Proton torpedo** (finale) | `F` / right-click / gamepad / the TORPEDO button |
+| **Pause** | `P` / `Esc` |
+
+Keep an enemy centred to build a **target lock** — the lead pip shows where to
+shoot moving TIEs. At the exhaust port, hold your aim until **TORPEDO LOCK**,
+then fire.
+
+Three difficulty tiers (Cadet / Pilot / Ace) and a graphics-quality toggle
+(High / Medium / Low — lower disables bloom for weaker GPUs). Best score is
+saved locally.
 
 ## Run locally
 
-It's a static site — just open `index.html`, or serve the folder:
+Static site — serve the folder over HTTP (ES modules need `http://`, not `file://`):
 
 ```bash
-python -m http.server 8000   # then visit http://localhost:8000
+python -m http.server 8000   # then open http://localhost:8000
 ```
 
-## Deploy (GitHub Pages)
+## Project layout
 
-This repo ships a GitHub Actions workflow (`.github/workflows/deploy.yml`) that
-publishes the site on every push to `main`.
+```
+index.html            import map + HUD markup + menus
+styles.css            HUD / menu / touch styling
+vendor/three/         Three.js r160 + postprocessing addons (vendored)
+src/
+  main.js             bootstrap, state machine, render loop
+  game/engine.js      renderer, camera, bloom/FXAA, quality tiers
+  game/models.js      procedural X-wing / TIE / tower / port
+  game/trench.js      recycling greebled trench segments
+  game/systems.js     flight, enemy AI, projectiles, particles, finale
+  game/input.js       keyboard / mouse / touch-stick / gamepad
+  game/audio.js       synthesized SFX + engine drone
+  game/hud.js         2D targeting-computer overlay + gauges
+  game/starfield.js   backdrop stars
+```
 
-1. Push to GitHub.
-2. **Settings → Pages → Build and deployment → Source: GitHub Actions.**
-3. The site goes live at `https://<user>.github.io/<repo>/`.
+Append `?debug` to the URL to expose a `window.__TR` harness (step the loop,
+inspect state, capture frames) used for headless verification.
 
-(`.nojekyll` is included so Pages serves the files as-is.)
+## Deploy
 
-## Files
-
-| File | Purpose |
-|------|---------|
-| `index.html` | Markup, HUD, and menu screens |
-| `style.css`  | Theme, HUD, responsive + touch layout |
-| `game.js`    | Engine: render, physics, audio, game loop |
+A GitHub Actions workflow (`.github/workflows/deploy.yml`) publishes to Pages on
+every push to `main`. Enable **Settings → Pages → Source: GitHub Actions**.
 
 ---
 
