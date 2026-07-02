@@ -270,7 +270,9 @@ export function createSystems(ctx) {
       if (!l.active) continue;
       l.mesh.position.addScaledVector(l.vel, dt);
       l.ttl -= dt;
-      if (l.ttl <= 0 || l.mesh.position.z > 20) { l.active = false; l.mesh.visible = false; continue; }
+      // cull just past the cockpit (camera sits at z≈8) so a missed bolt never
+      // streaks across/behind the screen after it passes you
+      if (l.ttl <= 0 || l.mesh.position.z > 4) { l.active = false; l.mesh.visible = false; continue; }
       if (l.mesh.position.distanceToSquared(ship.position) < 2.2) {
         l.active = false; l.mesh.visible = false; hurtPlayer(9); spark(ship.position);
       }
@@ -501,5 +503,5 @@ export function createSystems(ctx) {
     };
   }
 
-  return { reset, update, run, ship, hudSnapshot, startFinaleNow: startFinale, port, enemies };
+  return { reset, update, run, ship, hudSnapshot, startFinaleNow: startFinale, port, enemies, pLasers, eLasers };
 }
