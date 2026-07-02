@@ -7,12 +7,12 @@ const XMAX = TRENCH.HALF_W - 2.5;
 const YMIN = TRENCH.FLOOR_Y + 2.5;   // -4.5
 const YMAX = TRENCH.WALL_TOP - 3;    // 8
 const YMID = (YMIN + YMAX) / 2;
-const CONVERGE = 92;                 // laser convergence distance ahead
+const CONVERGE = 48;                 // reticle distance ahead (closer = more on-screen travel)
 
 const DIFF = {
-  cadet: { spawn: 1.9, fire: 2.6, espeed: 26, dmg: 0.7, regen: 9, target: 2400 },
-  pilot: { spawn: 1.35, fire: 1.8, espeed: 32, dmg: 1.0, regen: 6, target: 3000 },
-  ace:   { spawn: 0.95, fire: 1.2, espeed: 40, dmg: 1.35, regen: 3.5, target: 3600 },
+  cadet: { spawn: 1.9, fire: 2.6, espeed: 26, dmg: 0.7, regen: 9, target: 2400, aimErr: 3.4 },
+  pilot: { spawn: 1.35, fire: 1.8, espeed: 32, dmg: 1.0, regen: 6, target: 3000, aimErr: 2.2 },
+  ace:   { spawn: 0.95, fire: 1.2, espeed: 40, dmg: 1.35, regen: 3.5, target: 3600, aimErr: 1.3 },
 };
 
 export function createSystems(ctx) {
@@ -92,14 +92,14 @@ export function createSystems(ctx) {
     if (s.moveTo) {
       const tx = s.moveTo.nx * XMAX;
       const ty = THREE.MathUtils.clamp(YMID - s.moveTo.ny * (YMAX - YMID + 2.0), YMIN, YMAX);
-      const k = 1 - Math.exp(-14 * dt);
+      const k = 1 - Math.exp(-18 * dt);
       const nx = ship.position.x + (tx - ship.position.x) * k;
       const ny = ship.position.y + (ty - ship.position.y) * k;
       shipVel.x = (nx - ship.position.x) / Math.max(dt, 1e-4);
       shipVel.y = (ny - ship.position.y) / Math.max(dt, 1e-4);
       ship.position.x = nx; ship.position.y = ny;
     } else {
-      const accel = 64, maxv = 34, fric = 0.86;
+      const accel = 82, maxv = 44, fric = 0.86;
       shipVel.x += s.axisX * accel * dt;
       shipVel.y += s.axisY * accel * dt;
       shipVel.x = THREE.MathUtils.clamp(shipVel.x, -maxv, maxv);
@@ -156,7 +156,7 @@ export function createSystems(ctx) {
     e.grp.position.set(x, y, -430 - Math.random() * 120);
     e.vel.set(0, 0, run.diff.espeed * (0.7 + Math.random() * 0.5));
     e.hp = 1 + (Math.random() < 0.3 ? 1 : 0);
-    e.fireCd = 0.7 + Math.random() * run.diff.fire;
+    e.fireCd = 1.2 + Math.random() * run.diff.fire;
     e.phase = Math.random() * Math.PI * 2;
     e.weaveF = 0.6 + Math.random() * 0.9;
     e.active = true; e.dead = false; e.grp.visible = true;
@@ -185,7 +185,7 @@ export function createSystems(ctx) {
       // fire at player
       e.fireCd -= dt;
       if (e.fireCd <= 0 && e.grp.position.z < -30 && !run.finale) {
-        e.fireCd = 1.0 + Math.random() * run.diff.fire;
+        e.fireCd = 1.3 + Math.random() * run.diff.fire;
         fireEnemyLaser(e.grp.position);
       }
       // ram: detect crossing the ship plane (z=4) so a fast pass can't tunnel through
@@ -211,12 +211,15 @@ export function createSystems(ctx) {
 
   function fireEnemyLaser(fromPos) {
     const l = eLasers.find(x => !x.active); if (!l) return;
-    // aim at a lightly-led player position
-    const aim = V.copy(ship.position); aim.z += 0;
+    // aim at the player with difficulty-scaled inaccuracy so fire is dodgeable
+    const err = run.diff.aimErr;
+    const aim = V.copy(ship.position);
+    aim.x += (Math.random() * 2 - 1) * err;
+    aim.y += (Math.random() * 2 - 1) * err;
     l.mesh.position.copy(fromPos);
-    l.vel.copy(aim).sub(fromPos).normalize().multiplyScalar(150);
+    l.vel.copy(aim).sub(fromPos).normalize().multiplyScalar(120);
     l.mesh.lookAt(V2.copy(fromPos).add(l.vel));
-    l.active = true; l.mesh.visible = true; l.ttl = 4;
+    l.active = true; l.mesh.visible = true; l.ttl = 5;
     audio.enemyLaser();
   }
 
@@ -228,7 +231,7 @@ export function createSystems(ctx) {
       if (t.light) t.light.material.emissiveIntensity = 2 + Math.sin(run.time * 8) * 1.2;
       t.fireCd -= dt;
       if (t.fireCd <= 0 && t.grp.position.z < -40 && !run.finale) {
-        t.fireCd = 1.6 + Math.random();
+        t.fireCd = 2.0 + Math.random() * 1.4;
         fireEnemyLaser(V.copy(t.grp.position).add(V2.set(0, 2, 0)));
       }
       if (t.grp.position.z > 12) { t.active = false; t.grp.visible = false; }
@@ -398,11 +401,12 @@ export function createSystems(ctx) {
   // ---------------- camera ----------------
   function updateCamera(dt) {
     const f = Math.min(1, 5 * dt);
-    camera.position.x += (ship.position.x * 0.55 - camera.position.x) * f;
+    camera.position.x += (ship.position.x * 0.3 - camera.position.x) * f;
     camera.position.y += (2.4 + ship.position.y * 0.4 - camera.position.y) * f;
     camera.position.z += (8 - camera.position.z) * f;
-    // look toward the aim column so the reticle stays near screen centre
-    camera.lookAt(ship.position.x, ship.position.y * 0.55 + 0.4, -22);
+    // look mostly straight ahead (not glued to the ship's column) so steering
+    // visibly sweeps the ship + reticle across the frame
+    camera.lookAt(ship.position.x * 0.15, ship.position.y * 0.5 + 0.4, -22);
     // gentle, rate-limited bank (or none under reduced motion)
     const targetRoll = reduceMotion() ? 0 : -ship.rotation.z * 0.12;
     camRoll += (targetRoll - camRoll) * Math.min(1, 4 * dt);
