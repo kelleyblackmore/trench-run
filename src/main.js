@@ -6,6 +6,7 @@ import { createSystems } from './game/systems.js';
 import { createInput } from './game/input.js';
 import { createAudio } from './game/audio.js';
 import { createHud } from './game/hud.js';
+import { createHandControls } from './game/hands.js';
 
 const $ = id => document.getElementById(id);
 const sceneCanvas = $('scene');
@@ -28,6 +29,8 @@ buildStarfield(engine.scene);
 const audio = createAudio();
 const input = createInput(sceneCanvas);
 const hud = createHud(hudCanvas);
+const hands = createHandControls();
+input.setHandSource(hands.getSource);
 
 const systems = createSystems({
   scene: engine.scene, camera: engine.camera, engine, audio, input,
@@ -127,6 +130,14 @@ $('sound-btn').addEventListener('click', () => {
   $('sound-btn').setAttribute('aria-pressed', String(m));
   $('sound-btn').setAttribute('aria-label', m ? 'Sound off' : 'Sound on');
 });
+$('hand-btn').addEventListener('click', () => hands.toggle());
+hands.onState(s => {
+  const b = $('hand-btn');
+  b.classList.toggle('off', s === 'off');
+  b.classList.toggle('busy', s === 'loading');
+  b.setAttribute('aria-pressed', String(s === 'on'));
+  b.setAttribute('aria-label', s === 'on' ? 'Hand controls on' : 'Hand controls (webcam)');
+});
 $('quality-btn').addEventListener('click', () => {
   const order = ['low', 'medium', 'high'];
   quality = order[(order.indexOf(quality) + 1) % 3];
@@ -206,7 +217,7 @@ setTimeout(() => { if (state === 'loading') toTitle(); }, 350);
 if (/[?&]debug\b/.test(location.search)) {
   window.__TRERR = null;
   window.__TR = {
-    engine, systems, input, audio, hud,
+    engine, systems, input, audio, hud, hands,
     info: () => ({ state, ...snapshotRun(), err: window.__TRERR }),
     start: (d) => { if (d) difficulty = d; startRun(); },
     setState: (s) => { state = s; },

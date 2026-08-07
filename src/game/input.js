@@ -12,6 +12,7 @@ export function createInput(canvas) {
   };
   const src = { kbFire: false, mouseFire: false, kbBoost: false, torpHeld: false, torpEdge: false, padTorpPrev: false };
   const keys = {};
+  let handSource = null;   // () => {active,nx,ny,pinch,fist,torpEdge} | null — wired by main
 
   // ---------- keyboard ----------
   addEventListener('keydown', e => {
@@ -134,6 +135,19 @@ export function createInput(canvas) {
     state.boost = src.kbBoost || padBoost;
     state.torpedoHeld = src.torpHeld || padTorp;
     state.torpedoEdge = src.torpEdge;
+
+    // hand tracking: absolute target like the mouse, but only while no other
+    // axis source is live; pinch/fist OR into fire/boost so nothing sticks
+    const h = handSource && handSource();
+    if (h && h.active) {
+      if (!(ka.x || ka.y) && !stickActive && !padAxis) {
+        state.moveTo = { nx: h.nx, ny: h.ny };
+        state.axisX = 0; state.axisY = 0;
+      }
+      state.fire = state.fire || h.pinch;
+      state.boost = state.boost || h.fist;
+      if (h.torpEdge) { src.torpEdge = true; state.torpedoEdge = true; }
+    }
   }
 
   function resetEdges() { src.torpEdge = false; state.torpedoEdge = false; state.pausePressed = false; }
@@ -143,5 +157,5 @@ export function createInput(canvas) {
     state.axisX = state.axisY = 0; state.fire = state.boost = false; state.moveTo = null;
   }
 
-  return { state, update, resetEdges, clearAll, touchBtn };
+  return { state, update, resetEdges, clearAll, touchBtn, setHandSource: fn => { handSource = fn; } };
 }
