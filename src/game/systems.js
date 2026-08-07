@@ -62,6 +62,7 @@ export function createSystems(ctx) {
   };
 
   const V = new THREE.Vector3(), V2 = new THREE.Vector3();
+  const _from = new THREE.Vector3(), _aim = new THREE.Vector3();  // never passed across calls
   const _muzzle = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
   const worldMuzzle = () => {
     const c = ship.userData.wingCannons;
@@ -212,8 +213,10 @@ export function createSystems(ctx) {
   function fireEnemyLaser(fromPos) {
     const l = eLasers.find(x => !x.active); if (!l) return;
     // aim at the player with difficulty-scaled inaccuracy so fire is dodgeable
+    // NB: fromPos may be a caller's scratch vector — don't reuse V/V2 here or the
+    // aim write aliases the muzzle and the bolt spawns on the player (frozen flash)
     const err = run.diff.aimErr;
-    const aim = V.copy(ship.position);
+    const aim = _aim.copy(ship.position);
     aim.x += (Math.random() * 2 - 1) * err;
     aim.y += (Math.random() * 2 - 1) * err;
     l.mesh.position.copy(fromPos);
@@ -232,7 +235,8 @@ export function createSystems(ctx) {
       t.fireCd -= dt;
       if (t.fireCd <= 0 && t.grp.position.z < -40 && !run.finale) {
         t.fireCd = 2.0 + Math.random() * 1.4;
-        fireEnemyLaser(V.copy(t.grp.position).add(V2.set(0, 2, 0)));
+        _from.copy(t.grp.position); _from.y += 2;   // barrel height
+        fireEnemyLaser(_from);
       }
       if (t.grp.position.z > 12) { t.active = false; t.grp.visible = false; }
     }
@@ -503,5 +507,5 @@ export function createSystems(ctx) {
     };
   }
 
-  return { reset, update, run, ship, hudSnapshot, startFinaleNow: startFinale, port, enemies, pLasers, eLasers };
+  return { reset, update, run, ship, hudSnapshot, startFinaleNow: startFinale, port, enemies, pLasers, eLasers, towers };
 }
