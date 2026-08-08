@@ -7,11 +7,8 @@ exhaust port.
 
 Built with **Three.js** (WebGL) — cinematic bloom + FXAA post-processing, a
 procedurally-modelled X-wing and TIEs, a recycling greebled trench, synthesized
-audio, and a targeting-computer HUD. Optional **webcam hand-tracking controls**
-powered by TensorFlow.js: steer with your open palm, pinch to fire, make a fist
-to boost. **No build step, no external requests:** Three.js, TF.js, and the
-hand-landmark model weights are all vendored locally, so the whole thing is
-static and offline-capable.
+audio, and a targeting-computer HUD. **No build step, no external requests:**
+Three.js is vendored locally, so the whole thing is static and offline-capable.
 
 **▶ Play:** https://kelleyblackmore.github.io/trench-run/
 
@@ -24,7 +21,6 @@ static and offline-capable.
 | **Boost** | `Shift` (or the BOOST button on touch) |
 | **Proton torpedo** (finale) | `F` / right-click / gamepad / the TORPEDO button |
 | **Pause** | `P` / `Esc` |
-| **Hand tracking** (🖐 button) | open palm steers · pinch fires lasers **and** the torpedo · fist boosts |
 
 Keep an enemy centred to build a **target lock** — the lead pip shows where to
 shoot moving TIEs. At the exhaust port, hold your aim until **TORPEDO LOCK**,
@@ -48,15 +44,13 @@ python -m http.server 8000   # then open http://localhost:8000
 index.html            import map + HUD markup + menus
 styles.css            HUD / menu / touch styling
 vendor/three/         Three.js r160 + postprocessing addons (vendored)
-vendor/tfjs/          TensorFlow.js + hand-pose-detection + model weights (vendored)
 src/
   main.js             bootstrap, state machine, render loop
   game/engine.js      renderer, camera, bloom/FXAA, quality tiers
   game/models.js      procedural X-wing / TIE / tower / port
   game/trench.js      recycling greebled trench segments
   game/systems.js     flight, enemy AI, projectiles, particles, finale
-  game/input.js       keyboard / mouse / touch-stick / gamepad / hand source
-  game/hands.js       webcam hand-tracking controls (TF.js, lazy-loaded)
+  game/input.js       keyboard / mouse / touch-stick / gamepad
   game/audio.js       synthesized SFX + engine drone
   game/hud.js         2D targeting-computer overlay + gauges
   game/starfield.js   backdrop stars

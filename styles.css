@@ -135,16 +135,6 @@ kbd{background:#141b29;border:1px solid #2c3a52;border-bottom-width:2px;border-r
 .ubtn:hover{border-color:var(--blue);}
 .ubtn.off{color:#5a6678;}
 
-/* hand-tracking PiP */
-#handpip{position:absolute;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));z-index:7;
-  display:flex;flex-direction:column;gap:4px;pointer-events:none;}
-#handpip canvas{width:168px;height:126px;border-radius:8px;border:1px solid var(--panel-brd);background:var(--ink);}
-#hand-status{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--gold);text-align:center;text-shadow:0 0 6px rgba(0,0,0,.8);}
-#hand-video{display:none;}
-.ubtn.busy{animation:handpulse 1s infinite;}
-@keyframes handpulse{50%{opacity:.35;}}
-@media (pointer:coarse){#handpip{left:auto;right:max(14px,env(safe-area-inset-right));bottom:auto;top:64px;}}
-
 .touch-only{display:none;}
 @media (pointer:coarse){.touch-only{display:flex;}}
 @media (min-width:820px) and (pointer:fine){#touch{display:none !important;}}

@@ -62,13 +62,6 @@
       <div id="lock-status" class="lock-status hidden">TORPEDO LOCK</div>
     </div>
 
-    <!-- Hand-tracking PiP (webcam controls) -->
-    <div id="handpip" class="hidden" aria-hidden="true">
-      <canvas id="hand-overlay" width="168" height="126"></canvas>
-      <div id="hand-status">LOADING…</div>
-      <video id="hand-video" playsinline muted></video>
-    </div>
-
     <!-- Touch controls -->
     <div id="touch" class="hidden">
       <div id="stick-zone"><div id="stick-base"><div id="stick-knob"></div></div></div>
@@ -109,7 +102,6 @@
           <div class="mrow"><span class="mkeys"><kbd>Shift</kbd></span><span>engine boost</span></div>
           <div class="mrow"><span class="mkeys"><kbd>F</kbd> / <kbd>Space</kbd></span><span>fire proton torpedo (finale)</span></div>
           <div class="mrow"><span class="mkeys"><kbd>P</kbd> / <kbd>Esc</kbd></span><span>pause</span></div>
-          <div class="mrow"><span class="mkeys">🖐 webcam</span><span>toggle the 🖐 button — open palm steers · pinch fires · fist boosts</span></div>
           <div class="mrow touch-only"><span class="mkeys">left stick</span><span>steer · lasers auto-fire</span></div>
         </div>
         <p class="hint-lock">Keep an enemy centered to build a <b>target lock</b>; the lead pip shows where to shoot. At the port, hold your aim until <b>TORPEDO LOCK</b>, then fire.</p>
@@ -139,7 +131,6 @@
 
     <!-- Top-right utilities -->
     <div id="util">
-      <button id="hand-btn" class="ubtn off" aria-label="Hand controls (webcam)" aria-pressed="false" title="Hand controls (webcam)">🖐</button>
       <button id="sound-btn" class="ubtn" aria-label="Sound on" aria-pressed="false" title="Sound">♪</button>
       <button id="quality-btn" class="ubtn" aria-label="Graphics quality" title="Graphics quality">HIGH</button>
       <button id="pause-btn" class="ubtn hidden" aria-label="Pause" title="Pause">⏸</button>

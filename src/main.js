@@ -6,7 +6,6 @@ import { createSystems } from './game/systems.js';
 import { createInput } from './game/input.js';
 import { createAudio } from './game/audio.js';
 import { createHud } from './game/hud.js';
-import { createHandControls } from './game/hands.js';
 
 const $ = id => document.getElementById(id);
 const sceneCanvas = $('scene');
@@ -29,8 +28,6 @@ buildStarfield(engine.scene);
 const audio = createAudio();
 const input = createInput(sceneCanvas);
 const hud = createHud(hudCanvas);
-const hands = createHandControls();
-input.setHandSource(hands.getSource);
 
 const systems = createSystems({
   scene: engine.scene, camera: engine.camera, engine, audio, input,
@@ -132,20 +129,6 @@ $('sound-btn').addEventListener('click', () => {
   $('sound-btn').setAttribute('aria-pressed', String(m));
   $('sound-btn').setAttribute('aria-label', m ? 'Sound off' : 'Sound on');
 });
-$('hand-btn').addEventListener('click', () => {
-  // enabling mid-flight: pause first so shader warmup + camera prompt don't
-  // compete with gameplay rendering for the GPU
-  if (state === 'playing' && !hands.enabled) togglePause(true);
-  hands.toggle();
-});
-hands.onState(s => {
-  handsBusy = s === 'loading';
-  const b = $('hand-btn');
-  b.classList.toggle('off', s === 'off');
-  b.classList.toggle('busy', s === 'loading');
-  b.setAttribute('aria-pressed', String(s === 'on'));
-  b.setAttribute('aria-label', s === 'on' ? 'Hand controls on' : 'Hand controls (webcam)');
-});
 $('quality-btn').addEventListener('click', () => {
   const order = ['low', 'medium', 'high'];
   quality = order[(order.indexOf(quality) + 1) % 3];
@@ -184,7 +167,7 @@ function idle(dt) {
 // 'webglcontextrestored' never fires, leaving a black scene under a live HTML
 // HUD. Reload once to recover (at LOW quality for the session); if it resets
 // again, surface advice instead of reload-looping.
-let handsBusy = false, lostSince = 0, gpuHandled = false;
+let lostSince = 0, gpuHandled = false;
 const bootT = performance.now();
 function gpuWatch(now) {
   if (!engine.lost) {
@@ -207,13 +190,33 @@ function gpuWatch(now) {
   }
 }
 
+// ---------------- adaptive quality ----------------
+// sustained slow frames while playing step the tier down for this session only
+// (a manual quality-button click still persists the user's own choice)
+let perfAcc = 0, perfN = 0, perfHold = 0;
+function perfTick(rawDt, playing) {
+  if (!playing || rawDt <= 0 || rawDt > 0.5) { perfAcc = 0; perfN = 0; return; }
+  perfAcc += rawDt; perfN++;
+  if (perfAcc < 3) return;                 // evaluate ~3s windows
+  const avg = perfAcc / perfN;
+  perfAcc = 0; perfN = 0;
+  if (perfHold > 0) { perfHold--; return; }
+  if (avg > 0.028 && quality !== 'low') {  // sustained under ~36fps
+    quality = quality === 'high' ? 'medium' : 'low';
+    engine.setQuality(quality);
+    $('quality-btn').textContent = quality.toUpperCase();
+    hud.banner('GRAPHICS AUTO-ADJUSTED FOR PERFORMANCE', false);
+    perfHold = 2;                          // settle before judging again
+  }
+}
+
 // ---------------- main loop ----------------
 let last = performance.now();
 function frame(now) {
   let dt = (now - last) / 1000; last = now;
+  perfTick(dt, state === 'playing');
   if (dt > 0.05) dt = 0.05;
   gpuWatch(now);
-  if (handsBusy) { requestAnimationFrame(frame); return; }   // GPU belongs to shader warmup
   const { W, H } = engine.size;
 
   try {
@@ -255,7 +258,7 @@ setTimeout(() => { if (state === 'loading') toTitle(); }, 350);
 if (/[?&]debug\b/.test(location.search)) {
   window.__TRERR = null;
   window.__TR = {
-    engine, systems, input, audio, hud, hands, gpuWatch,
+    engine, systems, input, audio, hud, gpuWatch, perfTick,
     info: () => ({ state, ...snapshotRun(), err: window.__TRERR }),
     start: (d) => { if (d) difficulty = d; startRun(); },
     setState: (s) => { state = s; },
