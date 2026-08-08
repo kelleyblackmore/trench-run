@@ -51,6 +51,8 @@ const LS = {
 const autoDefault = reduceMotion ? 'low'
   : (engine.coarse || (navigator.hardwareConcurrency || 8) <= 4) ? 'medium' : 'high';
 let quality = ['low', 'medium', 'high'].includes(LS.quality) ? LS.quality : autoDefault;
+// after a GPU driver reset this session, run without bloom so it can't re-trip
+if (sessionStorage.getItem('tr.gpureset')) quality = 'low';
 let difficulty = LS.diff;
 engine.setQuality(quality);
 $('quality-btn').textContent = quality.toUpperCase();
@@ -137,6 +139,7 @@ $('hand-btn').addEventListener('click', () => {
   hands.toggle();
 });
 hands.onState(s => {
+  handsBusy = s === 'loading';
   const b = $('hand-btn');
   b.classList.toggle('off', s === 'off');
   b.classList.toggle('busy', s === 'loading');
@@ -176,11 +179,41 @@ function idle(dt) {
   trench.update(34 * dt);
 }
 
+// ---------------- GPU watchdog ----------------
+// On Windows a driver reset (TDR) can permanently remove the WebGL device —
+// 'webglcontextrestored' never fires, leaving a black scene under a live HTML
+// HUD. Reload once to recover (at LOW quality for the session); if it resets
+// again, surface advice instead of reload-looping.
+let handsBusy = false, lostSince = 0, gpuHandled = false;
+const bootT = performance.now();
+function gpuWatch(now) {
+  if (!engine.lost) {
+    lostSince = 0;
+    if (now - bootT > 60000 && sessionStorage.getItem('tr.gpureset')) sessionStorage.removeItem('tr.gpureset');
+    return;
+  }
+  if (!lostSince) lostSince = now;
+  if (now - lostSince < 2500 || gpuHandled) return;
+  gpuHandled = true;
+  const again = sessionStorage.getItem('tr.gpureset');
+  $('loading').innerHTML = '<p class="loading-txt">' + (again
+    ? 'GRAPHICS DEVICE KEEPS RESETTING — TRY ANOTHER BROWSER, OR UPDATE YOUR GPU DRIVER.'
+    : 'GRAPHICS DEVICE RESET — RESTARTING…') + '</p>';
+  state = 'loading'; showScreen('loading'); setPlayingUI(false);
+  audio.stopEngine();
+  if (!again) {
+    sessionStorage.setItem('tr.gpureset', '1');
+    setTimeout(() => location.reload(), 900);
+  }
+}
+
 // ---------------- main loop ----------------
 let last = performance.now();
 function frame(now) {
   let dt = (now - last) / 1000; last = now;
   if (dt > 0.05) dt = 0.05;
+  gpuWatch(now);
+  if (handsBusy) { requestAnimationFrame(frame); return; }   // GPU belongs to shader warmup
   const { W, H } = engine.size;
 
   try {
@@ -222,7 +255,7 @@ setTimeout(() => { if (state === 'loading') toTitle(); }, 350);
 if (/[?&]debug\b/.test(location.search)) {
   window.__TRERR = null;
   window.__TR = {
-    engine, systems, input, audio, hud, hands,
+    engine, systems, input, audio, hud, hands, gpuWatch,
     info: () => ({ state, ...snapshotRun(), err: window.__TRERR }),
     start: (d) => { if (d) difficulty = d; startRun(); },
     setState: (s) => { state = s; },

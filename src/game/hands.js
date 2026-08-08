@@ -84,7 +84,7 @@ export function createHandControls() {
       await ensureDetector();
       status('STARTING CAMERA…');
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: 'user' },
+        video: { width: { ideal: 320, max: 480 }, height: { ideal: 240, max: 360 }, facingMode: 'user' },
         audio: false,
       });
       video.srcObject = stream;
@@ -110,9 +110,13 @@ export function createHandControls() {
     emit('off');
   }
 
+  const DETECT_MS = 66;   // ~15 Hz detection — plenty for palm steering, halves GPU load
+  let lastDetect = 0;
   async function loop() {
     if (!enabled) return;
-    if (video.readyState >= 2) {
+    const now = performance.now();
+    if (now - lastDetect >= DETECT_MS && video.readyState >= 2) {
+      lastDetect = now;
       let hands = [];
       try { hands = await detector.estimateHands(video); }
       catch (e) { console.warn('estimateHands:', e); }
@@ -140,6 +144,7 @@ export function createHandControls() {
     px /= 5; py /= 5;
     const tx = clamp(-(px / vw * 2 - 1) * GAIN);   // mirrored: hand right → ship right
     const ty = clamp((py / vh * 2 - 1) * GAIN);    // same sign convention as mouse ny
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;   // never feed the ship a NaN
     if (!haveHand) { sx = tx; sy = ty; }           // snap on acquire, smooth after
     else { sx += (tx - sx) * SMOOTH; sy += (ty - sy) * SMOOTH; }
     haveHand = true;
