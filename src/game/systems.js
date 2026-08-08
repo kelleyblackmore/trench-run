@@ -58,7 +58,8 @@ export function createSystems(ctx) {
     diff: DIFF.pilot, hull: 100, shields: 100, score: 0, kills: 0,
     distance: 0, speed: 46, time: 0, finale: false, over: false,
     spawnT: 1.2, towerT: 3, hurt: 0, shieldCd: 0, energy: 100,
-    lock: 0, locked: false, torpActive: false, torpZ: 0, portPassed: 0
+    lock: 0, locked: false, torpActive: false, torpZ: 0, portPassed: 0,
+    shake: 0
   };
 
   const V = new THREE.Vector3(), V2 = new THREE.Vector3();
@@ -76,7 +77,7 @@ export function createSystems(ctx) {
     run.distance = 0; run.speed = run.diff.espeed + 14; run.time = 0;
     run.finale = false; run.over = false; run.spawnT = 1.0; run.towerT = 2.6;
     run.hurt = 0; run.shieldCd = 0; run.energy = 100; run.lock = 0; run.locked = false;
-    run.torpActive = false; run.portPassed = 0;
+    run.torpActive = false; run.portPassed = 0; run.shake = 0;
     ship.position.set(0, 0, 0); ship.rotation.set(0, 0, 0); shipVel.set(0, 0);
     pLasers.concat(eLasers).forEach(l => { l.active = false; l.mesh.visible = false; });
     enemies.forEach(e => { e.active = false; e.grp.visible = false; });
@@ -285,6 +286,7 @@ export function createSystems(ctx) {
 
   // ---------------- particles ----------------
   function explode(pos, big) {
+    if (big) run.shake = Math.min(1, run.shake + 0.25);
     const count = big ? 26 : 16;
     let made = 0;
     for (const p of particles) {
@@ -335,6 +337,7 @@ export function createSystems(ctx) {
       run.hull -= amount;
     }
     run.hurt = 0.4;
+    run.shake = Math.min(1, 0.3 + amount * 0.025);
     audio.damage();
     if (run.hull <= 0 && !run.over) { run.hull = 0; run.over = true; explode(ship.position, true); audio.explosion(true); onLose(); }
   }
@@ -417,6 +420,15 @@ export function createSystems(ctx) {
     const targetRoll = reduceMotion() ? 0 : -ship.rotation.z * 0.12;
     camRoll += (targetRoll - camRoll) * Math.min(1, 4 * dt);
     camera.rotateZ(camRoll);
+    // impact shake: brief additive jitter, decayed fast; the follow-lerp above
+    // re-centres it, and reduced-motion users get none
+    if (run.shake > 0) {
+      if (!reduceMotion()) {
+        camera.position.x += (Math.random() * 2 - 1) * run.shake * 0.3;
+        camera.position.y += (Math.random() * 2 - 1) * run.shake * 0.3;
+      }
+      run.shake = Math.max(0, run.shake - dt * 2.2);
+    }
   }
 
   // ---------------- main update ----------------
