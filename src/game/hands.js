@@ -53,6 +53,26 @@ export function createHandControls() {
         detectorModelUrl: `${VENDOR}/models/detector/model.json`,
         landmarkModelUrl: `${VENDOR}/models/landmark/model.json`,
       });
+    // Warm up BOTH nets before the camera starts. Left cold, the landmark net
+    // compiles its WebGL shaders on the first real hand detection — mid-game, a
+    // GPU stall long enough to trip Windows' driver timeout and reset the
+    // context. A blank frame only exercises the detector (no hand → landmark
+    // never runs), so execute the landmark graph directly once: its compiled
+    // programs stay in tf's per-backend shader cache and the wrapper reuses them.
+    status('COMPILING SHADERS…');
+    const blank = document.createElement('canvas');
+    blank.width = 320; blank.height = 240;
+    blank.getContext('2d').fillRect(0, 0, 320, 240);
+    await detector.estimateHands(blank);
+    try {
+      const lm = await window.tf.loadGraphModel(`${VENDOR}/models/landmark/model.json`);
+      const zeros = window.tf.zeros([1, 224, 224, 3]);
+      const out = lm.predict(zeros);
+      const outs = Array.isArray(out) ? out : [out];
+      await Promise.all(outs.map(t => t.data()));   // force compile + execute
+      outs.forEach(t => t.dispose());
+      zeros.dispose(); lm.dispose();
+    } catch (e) { console.warn('landmark warmup:', e); }
   }
 
   async function enable() {

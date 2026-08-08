@@ -130,7 +130,12 @@ $('sound-btn').addEventListener('click', () => {
   $('sound-btn').setAttribute('aria-pressed', String(m));
   $('sound-btn').setAttribute('aria-label', m ? 'Sound off' : 'Sound on');
 });
-$('hand-btn').addEventListener('click', () => hands.toggle());
+$('hand-btn').addEventListener('click', () => {
+  // enabling mid-flight: pause first so shader warmup + camera prompt don't
+  // compete with gameplay rendering for the GPU
+  if (state === 'playing' && !hands.enabled) togglePause(true);
+  hands.toggle();
+});
 hands.onState(s => {
   const b = $('hand-btn');
   b.classList.toggle('off', s === 'off');
